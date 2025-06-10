@@ -86,9 +86,9 @@ void loop() {
     // Serial print jak wcześniej...
     if (gps.location.isValid()) {
       Serial.print(F("Lokalizacja: "));
-      Serial.print(lat, 6);
+      Serial.print(gps.location.lat(), 6);
       Serial.print(F(", "));
-      Serial.println(lng, 6);
+      Serial.println(gps.location.lng(), 6);
     } else {
       Serial.println(F("Lokalizacja: NIEZNANA"));
     }
@@ -100,7 +100,7 @@ void loop() {
     }
     if (gps.hdop.isValid()) {
       Serial.print(F("HDOP: "));
-      Serial.println(hdop);
+      Serial.println(gps.hdop.hdop());
     } else {
       Serial.println(F("HDOP: brak danych"));
     }
@@ -118,6 +118,6 @@ void loop() {
       "{\"lat\":%.6f,\"lng\":%.6f,\"sats\":%d,\"hdop\":%d,\"czas\":\"%s\"}",
       lat, lng, sats, hdop, czas
     );
-    client.publish("gps/status", payload);
+    client.publish("s-w-iot-g-project", payload);
   }
 }
