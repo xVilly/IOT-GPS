@@ -1,0 +1,436 @@
+[
+    {
+        "id": "035720aa734f810c",
+        "type": "tab",
+        "label": "Projekt-IOT",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "12fa29cd99faba84",
+        "type": "mqtt in",
+        "z": "035720aa734f810c",
+        "name": "",
+        "topic": "s-w-iot-g-project",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "d8e06c14db482459",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 360,
+        "y": 140,
+        "wires": [
+            [
+                "02f3702528a6836a",
+                "bd3a77af8cf26e91",
+                "b6da749382f826b9"
+            ]
+        ]
+    },
+    {
+        "id": "02f3702528a6836a",
+        "type": "function",
+        "z": "035720aa734f810c",
+        "name": "URL FORMATTING",
+        "func": "// Example: set lat/lon from incoming payload\nlet lat = msg.payload.lat || 50.050000;   // fallback to Kraków\nlet lon = msg.payload.lng || 19.933333;\n\nmsg.url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`;\n\n// Optionally, define more parameters (like hourly data)\nmsg.url += `&current=temperature_2m,wind_speed_10m,surface_pressure,relative_humidity_2m`;\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 490,
+        "y": 220,
+        "wires": [
+            [
+                "26aeb4fccc80ecb3"
+            ]
+        ]
+    },
+    {
+        "id": "c74a86933d8dbf01",
+        "type": "function",
+        "z": "035720aa734f810c",
+        "name": "GET_THE_TEMP",
+        "func": "\nreturn {\n    ...msg,\n    payload: msg.payload.current.temperature_2m\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1010,
+        "y": 80,
+        "wires": [
+            [
+                "8e00212c72a4f65f"
+            ]
+        ]
+    },
+    {
+        "id": "26aeb4fccc80ecb3",
+        "type": "http request",
+        "z": "035720aa734f810c",
+        "name": "LAT&LNG_WEATHER_REQUEST",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 760,
+        "y": 220,
+        "wires": [
+            [
+                "c74a86933d8dbf01",
+                "6bae2d7d7fe05ad2"
+            ]
+        ]
+    },
+    {
+        "id": "8e00212c72a4f65f",
+        "type": "ui_chart",
+        "z": "035720aa734f810c",
+        "name": "",
+        "group": "53ce8989824f6ea9",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "label": "Temperature chart",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 1150,
+        "y": 220,
+        "wires": [
+            [
+                "625a3c98e7fad1d1"
+            ]
+        ]
+    },
+    {
+        "id": "812284a74250c4d1",
+        "type": "influxdb out",
+        "z": "035720aa734f810c",
+        "influxdb": "d4fef49501fa53a0",
+        "name": "save_weather_data_to_database",
+        "measurement": "weather_data",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "influxdb",
+        "bucket": "project_buck",
+        "x": 1360,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "6bae2d7d7fe05ad2",
+        "type": "function",
+        "z": "035720aa734f810c",
+        "name": "GET_THE_WEATHER_DATA",
+        "func": "// Assuming msg.payload.current exists and contains the temperature and wind speed\n// from your incoming message.\n\nreturn {\n    ...msg, // Keep all other existing properties of the message (e.g., _msgid, topic)\n    payload: { // Set payload to be an object\n        temperature: msg.payload.current.temperature_2m,\n        windspeed: msg.payload.current.wind_speed_10m,\n        pressure: msg.payload.current.surface_pressure,\n        humidity: msg.payload.current.relative_humidity_2m\n    }\n};",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 970,
+        "y": 300,
+        "wires": [
+            [
+                "20b802ca37810d63",
+                "812284a74250c4d1"
+            ]
+        ]
+    },
+    {
+        "id": "5685b0b8d1e90d9a",
+        "type": "inject",
+        "z": "035720aa734f810c",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 340,
+        "y": 360,
+        "wires": [
+            [
+                "43b4220f77a839cc"
+            ]
+        ]
+    },
+    {
+        "id": "20b802ca37810d63",
+        "type": "debug",
+        "z": "035720aa734f810c",
+        "name": "API DATA TEST",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1180,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "43b4220f77a839cc",
+        "type": "http request",
+        "z": "035720aa734f810c",
+        "name": "LAT&LNG_WEATHER_REQUEST2",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "https://api.open-meteo.com/v1/forecast?latitude=51&longitude=17&current=temperature_2m,wind_speed_10m,surface_pressure,relative_humidity_2m",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 560,
+        "y": 380,
+        "wires": [
+            [
+                "b07ace4a61e212e4"
+            ]
+        ]
+    },
+    {
+        "id": "b07ace4a61e212e4",
+        "type": "json",
+        "z": "035720aa734f810c",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 730,
+        "y": 580,
+        "wires": [
+            [
+                "6bae2d7d7fe05ad2"
+            ]
+        ]
+    },
+    {
+        "id": "625a3c98e7fad1d1",
+        "type": "influxdb out",
+        "z": "035720aa734f810c",
+        "influxdb": "6f0dc085b0041bf5",
+        "name": "save_gps_data_to_database",
+        "measurement": "gps_data",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "samle_text_org",
+        "bucket": "project_buck",
+        "x": 1400,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "f478a306775a73b7",
+        "type": "function",
+        "z": "035720aa734f810c",
+        "name": "GET_THE_GPS_DATA",
+        "func": "// Assuming msg.payload.current exists and contains the temperature and wind speed\n// from your incoming message.\n\nreturn {\n    ...msg, // Keep all other existing properties of the message (e.g., _msgid, topic)\n    payload: { // Set payload to be an object\n        latitude: msg.payload.lat,\n        longtitude: msg.payload.lng,\n        satelites: msg.payload.sats,\n        hdop: msg.payload.hdop,\n        time: msg.payload.czas\n    }\n};",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 650,
+        "y": 300,
+        "wires": [
+            [
+                "c7d847fdabedd1a4"
+            ]
+        ]
+    },
+    {
+        "id": "bd3a77af8cf26e91",
+        "type": "json",
+        "z": "035720aa734f810c",
+        "name": "",
+        "property": "payload",
+        "action": "obj",
+        "pretty": false,
+        "x": 430,
+        "y": 300,
+        "wires": [
+            [
+                "f478a306775a73b7"
+            ]
+        ]
+    },
+    {
+        "id": "c7d847fdabedd1a4",
+        "type": "debug",
+        "z": "035720aa734f810c",
+        "name": "GPS DATA TEST",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 950,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "b6da749382f826b9",
+        "type": "debug",
+        "z": "035720aa734f810c",
+        "name": "debug 2",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 560,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "d8e06c14db482459",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "broker.hivemq.com",
+        "port": 1883,
+        "tls": "",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "53ce8989824f6ea9",
+        "type": "ui_group",
+        "name": "Group 1",
+        "tab": "86c34a227ccc32dc",
+        "order": 1,
+        "disp": true,
+        "width": 6
+    },
+    {
+        "id": "d4fef49501fa53a0",
+        "type": "influxdb",
+        "hostname": "127.0.0.1",
+        "port": 8086,
+        "protocol": "http",
+        "database": "database",
+        "name": "InfluxDB",
+        "usetls": false,
+        "tls": "",
+        "influxdbVersion": "2.0",
+        "url": "http://host.docker.internal:8086",
+        "timeout": 10,
+        "rejectUnauthorized": false
+    },
+    {
+        "id": "6f0dc085b0041bf5",
+        "type": "influxdb",
+        "hostname": "127.0.0.1",
+        "port": 8086,
+        "protocol": "http",
+        "database": "database",
+        "name": "",
+        "usetls": false,
+        "tls": "",
+        "influxdbVersion": "2.0",
+        "url": "http://localhost:8086",
+        "timeout": 10,
+        "rejectUnauthorized": true
+    },
+    {
+        "id": "86c34a227ccc32dc",
+        "type": "ui_tab",
+        "name": "IoT GPS",
+        "icon": "dashboard",
+        "order": 2,
+        "disabled": false,
+        "hidden": false
+    }
+]
